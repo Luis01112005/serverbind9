@@ -1,0 +1,34 @@
+services:
+  bind9:
+    image: ubuntu:24.04  # Usa la imagen base de Ubuntu 22.04.
+    container_name: bind9-container  # Nombre del contenedor en Docker.
+    environment:
+      - TZ=UTC  # Configura la zona horaria del contenedor a UTC.
+    ports:
+      - "30053:53/tcp"   # Mapea el puerto TCP 53 del contenedor a 30053 en el host.
+      - "30053:53/udp"   # Mapea el puerto UDP 53 del contenedor a 30053 en el host.
+    volumes:
+      - ./named.conf.local:/etc/bind/named.conf.local  # Monta la configuración de zonas locales.
+      - ./named.conf.options:/etc/bind/named.conf.options  # Monta las opciones generales de configuración.
+      - ./luisvir.com.db:/var/cache/bind/zones/luisvir.com.db  # Monta el archivo de zona.
+      - ./ipdinamica.sh:/do-nsupdate.sh  # Monta un script para actualizaciones dinámicas.
+    restart: unless-stopped  # Reinicia automáticamente el contenedor si se detiene o falla.
+    command:
+      - "/bin/bash"
+      - "-c"
+      - |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update && apt-get --yes install bind9 dnsutils wget curl cron  # Instala bind9, utilidades necesarias y cron.
+          mkdir -p /var/cache/bind/zones  # Asegúrate de que el directorio para las zonas exista.
+          # Agregar el script al cron para que se ejecute cada 15 minutos
+          echo "*/15 * * * * /bin/bash /do-nsupdate.sh" > /etc/cron.d/nsupdate  # Añade la tarea cron.
+          chmod 0644 /etc/cron.d/nsupdate  # Cambia los permisos para el archivo cron.
+          # Ejecuta named en primer plano y espera que se detenga
+          /usr/sbin/named -g  # Ejecuta BIND en modo foreground para mantener el contenedor activo.
+          tail -f /dev/null  # Mantiene el contenedor activo si named se detiene.
+    networks:
+      - my_network  # Define la red a la que pertenece el contenedor.
+
+networks:
+  my_network:
+    driver: bridge  # Usa el controlador de red 'bridge'.
