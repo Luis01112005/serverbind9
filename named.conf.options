@@ -1,0 +1,15 @@
+options {
+    directory "/var/cache/bind";  # Directorio para almacenar los archivos de caché de zonas.
+
+    recursion yes;  # Deshabilita la recursividad para limitar el uso como resolver público.
+
+    forwarders {
+        1.1.1.1;  # Cloudflare DNS.
+        8.8.8.8;  # Google DNS.
+    };
+
+    dnssec-validation auto;  # Habilita la validación de DNSSEC automáticamente.
+
+    listen-on port 53 { any; };  # Escucha en todas las interfaces disponibles.
+    listen-on-v6 { none; };  # Deshabilita IPv6 si no se usa.
+};
