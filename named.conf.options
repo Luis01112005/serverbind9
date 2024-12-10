@@ -1,7 +1,7 @@
 options {
     directory "/var/cache/bind";  # Directorio para almacenar los archivos de caché de zonas.
 
-    recursion yes;  # Deshabilita la recursividad para limitar el uso como resolver público.
+    recursion yes;  
 
     forwarders {
         1.1.1.1;  # Cloudflare DNS.
